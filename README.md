@@ -22,6 +22,7 @@ For any usage of these models please refer to
 	 doi =  {10.1017/jfm.2018.577},
 	url= {https://doi.org/10.1017/jfm.2018.577}
 	}
+We acknowledge financial support from the Independent Research Fund Denmark project SWASH: Simulating WAve Surf-zone Hydrodynamics and sea bed morphology, Grant no. 8022-00137B.
 
 ## Installation
 Source OpenFOAM-v1712:
