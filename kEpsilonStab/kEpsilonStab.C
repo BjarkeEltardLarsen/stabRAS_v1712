@@ -259,10 +259,9 @@ void kEpsilonStab<BasicTurbulenceModel>::correct()
     const alphaField& alpha = this->alpha_;
   const volVectorField& U = this->U_;
   const volScalarField& rho1 = U.db().objectRegistry::lookupObject<volScalarField>("rho"); // needed to calculate N2
-    const rhoField& rho = this->rho_;
-    const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
-  
-
+  // const rhoField& rho = this->rho_;
+  // const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
+const surfaceScalarField& rhoPhi = U.db().objectRegistry::lookupObject<surfaceScalarField>("rhoPhi");
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Include density and buoyancy production term. Implemented by Bjarke Eltard Larsen 18-07-2018
 
@@ -307,15 +306,15 @@ void kEpsilonStab<BasicTurbulenceModel>::correct()
     // Dissipation equation
     tmp<fvScalarMatrix> epsEqn
     (
-        fvm::ddt(alpha, rho, epsilon_)
-      + fvm::div(alphaRhoPhi, epsilon_)
-      - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
+        fvm::ddt(alpha, rho1, epsilon_)
+      + fvm::div(rhoPhi, epsilon_)
+      - fvm::laplacian(alpha*rho1*DepsilonEff(), epsilon_)
      ==
-        C1_*alpha()*rho()*Cmu_*k_()*p0
-      - fvm::SuSp(((2.0/3.0)*C1_ - C3_)*alpha()*rho()*divU, epsilon_)
-      - fvm::Sp(C2_*alpha()*rho()*epsilon_()/k_(), epsilon_)
-      + epsilonSource()
-      + fvOptions(alpha, rho, epsilon_)
+        C1_*alpha()*rho1()*Cmu_*k_()*p0
+	- fvm::SuSp(((2.0/3.0)*C1_ - C3_)*alpha()*rho1()*divU, epsilon_)
+	- fvm::Sp(C2_*alpha()*rho1()*epsilon_()/k_(), epsilon_)
+       + rho1*epsilonSource()
+      + fvOptions(alpha, rho1, epsilon_)
     );
 
     epsEqn.ref().relax();
@@ -328,16 +327,16 @@ void kEpsilonStab<BasicTurbulenceModel>::correct()
     // Turbulent kinetic energy equation
     tmp<fvScalarMatrix> kEqn
     (
-        fvm::ddt(alpha, rho, k_)
-      + fvm::div(alphaRhoPhi, k_)
-      - fvm::laplacian(alpha*rho*DkEff(), k_)
+        fvm::ddt(alpha, rho1, k_)
+      + fvm::div(rhoPhi, k_)
+      - fvm::laplacian(alpha*rho1*DkEff(), k_)
      ==
-        alpha()*rho()*G
-      - fvm::SuSp((2.0/3.0)*alpha()*rho()*divU, k_)
-      - fvm::Sp(alpha()*rho()*epsilon_()/k_(), k_)
- - fvm::Sp(nut*alphaBS_*N2/max(k_,this->kMin_),k_) // Buoyancy production term
-      + kSource()
-      + fvOptions(alpha, rho, k_)
+        alpha()*rho1()*G
+	- fvm::SuSp((2.0/3.0)*alpha()*rho1()*divU, k_)
+	- fvm::Sp(alpha()*rho1()*epsilon_()/k_(), k_)
+	- fvm::Sp(nut*alphaBS_*N2*rho1/max(k_,this->kMin_),k_) // Buoyancy production term
+	    + rho1*kSource()
+      + fvOptions(alpha, rho1, k_)
     );
 
     kEqn.ref().relax();
