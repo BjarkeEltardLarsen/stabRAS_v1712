@@ -454,11 +454,11 @@ void kOmegaSSTStab<TurbulenceModel, BasicTurbulenceModel>::correct()
 
     // Local references
     const alphaField& alpha = this->alpha_;
-    const rhoField& rho = this->rho_;
-    const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
+    // const rhoField& rho = this->rho_;
+    // const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
     const volVectorField& U = this->U_;
  const volScalarField& rho1 = U.db().objectRegistry::lookupObject<volScalarField>("rho");
-
+const surfaceScalarField& rhoPhi = U.db().objectRegistry::lookupObject<surfaceScalarField>("rhoPhi");
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Include density and buoyancy production term. Implemented by Bjarke Eltard Larsen 18-07-2018
 
@@ -512,27 +512,27 @@ volScalarField F2(this->F2());
         // Turbulent frequency equation
         tmp<fvScalarMatrix> omegaEqn
         (
-            fvm::ddt(alpha, rho, omega_)
-          + fvm::div(alphaRhoPhi, omega_)
-          - fvm::laplacian(alpha*rho*DomegaEff(F1), omega_)
+            fvm::ddt(alpha, rho1, omega_)
+          + fvm::div(rhoPhi, omega_)
+          - fvm::laplacian(alpha*rho1*DomegaEff(F1), omega_)
          ==
-            alpha()*rho()*gamma*p0
+            alpha()*rho1()*gamma*p0
 	    //   *min
 	    //   (
             //    GbyNu,
             //    (c1_/a1_)*betaStar_*omega_()
 	    //  *max(a1_*omega_(), b1_*F23()*sqrt(S2()))
 	    // ) BJELT production of omega is not altered in standard SST models
-	     - fvm::SuSp((2.0/3.0)*alpha()*rho()*gamma*divU, omega_) 
-          - fvm::Sp(alpha()*rho()*beta*omega_(), omega_)
+	     - fvm::SuSp((2.0/3.0)*alpha()*rho1()*gamma*divU, omega_) 
+          - fvm::Sp(alpha()*rho1()*beta*omega_(), omega_)
           - fvm::SuSp
             (
-                alpha()*rho()*(F1() - scalar(1))*CDkOmega()/omega_(),
+                alpha()*rho1()*(F1() - scalar(1))*CDkOmega()/omega_(),
                 omega_
             )
-          + Qsas(S2(), gamma, beta)
-          + omegaSource()
-          + fvOptions(alpha, rho, omega_)
+          + rho1*Qsas(S2(), gamma, beta)
+          + rho1*omegaSource()
+          + fvOptions(alpha, rho1, omega_)
         );
 
         omegaEqn.ref().relax();
@@ -546,17 +546,17 @@ volScalarField F2(this->F2());
     // Turbulent kinetic energy equation
     tmp<fvScalarMatrix> kEqn
     (
-        fvm::ddt(alpha, rho, k_)
-      + fvm::div(alphaRhoPhi, k_)
-      - fvm::laplacian(alpha*rho*DkEff(F1), k_)
+        fvm::ddt(alpha, rho1, k_)
+      + fvm::div(rhoPhi, k_)
+      - fvm::laplacian(alpha*rho1*DkEff(F1), k_)
      ==
-        alpha()*rho()*Pk(G)
-	 - fvm::SuSp((2.0/3.0)*alpha()*rho()*divU, k_) 
-      - fvm::Sp(alpha()*rho()*epsilonByk(F1, F23), k_)
- - fvm::Sp(nut*alphaBS_*N2/max(k_,this->kMin_),k_) // Buoyancy production term
+        alpha()*rho1()*Pk(G)
+	 - fvm::SuSp((2.0/3.0)*alpha()*rho1()*divU, k_) 
+      - fvm::Sp(alpha()*rho1()*epsilonByk(F1, F23), k_)
+ - fvm::Sp(nut*alphaBS_*N2*rho1/max(k_,this->kMin_),k_) // Buoyancy production term
 
-      + kSource()
-      + fvOptions(alpha, rho, k_)
+      + rho1*kSource()
+      + fvOptions(alpha, rho1, k_)
     );
 
     kEqn.ref().relax();
