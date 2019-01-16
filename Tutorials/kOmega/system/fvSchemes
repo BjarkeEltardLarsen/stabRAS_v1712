@@ -32,8 +32,8 @@ divSchemes
     div(rhoPhi,U)  Gauss SFCD;
     div(phi,alpha)  Gauss vanLeer01;
     div(phirb,alpha) Gauss interfaceCompression;
-   div(rhi*phi,k)      Gauss Minmod;
-    div(rho*phi,omega) Gauss Minmod;
+   div(rhoPhi,k)      Gauss upwind;
+    div(rhoPhi,omega) Gauss upwind;
 
    div(phi,k)      Gauss upwind;
     div(phi,omega) Gauss upwind;
