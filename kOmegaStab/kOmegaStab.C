@@ -236,9 +236,9 @@ void kOmegaStab<BasicTurbulenceModel>::correct()
     const alphaField& alpha = this->alpha_;
   const volVectorField& U = this->U_;
     const volScalarField& rho1 = U.db().objectRegistry::lookupObject<volScalarField>("rho");
-    const rhoField& rho = this->rho_;
-    const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
-  
+    //    const rhoField& rho = this->rho_;
+    //  const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
+const surfaceScalarField& rhoPhi = U.db().objectRegistry::lookupObject<surfaceScalarField>("rhoPhi");
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Include density and buoyancy production term. Implemented by Bjarke Eltard Larsen 18-07-2018
@@ -279,14 +279,14 @@ void kOmegaStab<BasicTurbulenceModel>::correct()
     // Turbulence specific dissipation rate equation
     tmp<fvScalarMatrix> omegaEqn
     (
-        fvm::ddt(alpha, rho, omega_)
-      + fvm::div(alphaRhoPhi, omega_)
-      - fvm::laplacian(alpha*rho*DomegaEff(), omega_)
+        fvm::ddt(alpha, rho1, omega_)
+      + fvm::div(rhoPhi, omega_)
+      - fvm::laplacian(alpha*rho1*DomegaEff(), omega_)
      ==
-        gamma_*alpha*rho*p0
-	   - fvm::SuSp(((2.0/3.0)*gamma_)*alpha*rho*divU, omega_)
-      - fvm::Sp(beta_*alpha*rho*omega_, omega_)
-      + fvOptions(alpha, rho, omega_)
+        gamma_*alpha*rho1*p0
+	   - fvm::SuSp(((2.0/3.0)*gamma_)*alpha*rho1*divU, omega_)
+      - fvm::Sp(beta_*alpha*rho1*omega_, omega_)
+      + fvOptions(alpha, rho1, omega_)
     );
 
     omegaEqn.ref().relax();
@@ -300,15 +300,15 @@ void kOmegaStab<BasicTurbulenceModel>::correct()
     // Turbulent kinetic energy equation
     tmp<fvScalarMatrix> kEqn
     (
-        fvm::ddt(alpha, rho, k_)
-      + fvm::div(alphaRhoPhi, k_)
-      - fvm::laplacian(alpha*rho*DkEff(), k_)
+        fvm::ddt(alpha, rho1, k_)
+      + fvm::div(rhoPhi, k_)
+      - fvm::laplacian(alpha*rho1*DkEff(), k_)
      ==
-        alpha*rho*G
-	   - fvm::SuSp((2.0/3.0)*alpha*rho*divU, k_) 
-      - fvm::Sp(Cmu_*alpha*rho*omega_, k_)
- - fvm::Sp(nut*alphaBS_*N2/max(k_,this->kMin_),k_) // Buoyancy production term
-      + fvOptions(alpha, rho, k_)
+        alpha*rho1*G
+	   - fvm::SuSp((2.0/3.0)*alpha*rho1*divU, k_) 
+      - fvm::Sp(Cmu_*alpha*rho1*omega_, k_)
+ - fvm::Sp(nut*alphaBS_*N2*rho1/max(k_,this->kMin_),k_) // Buoyancy production term
+      + fvOptions(alpha, rho1, k_)
     );
 
     kEqn.ref().relax();
