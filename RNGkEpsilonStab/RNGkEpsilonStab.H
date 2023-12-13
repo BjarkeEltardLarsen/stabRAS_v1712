@@ -201,7 +201,8 @@ public:
                 new volScalarField
                 (
                     "DepsilonEff",
-                    ((Cmu_*sqr(this->k())/this->epsilon())/sigmak_ + this->nu())
+                    ((Cmu_*sqr(this->k())/this->epsilon())/sigmaEps_ + this->nu())
+                    // ((Cmu_*sqr(this->k())/this->epsilon())/sigmak_ + this->nu())
                 )
             );
         }
